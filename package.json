@@ -1,0 +1,20 @@
+{
+  "name": "clapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "babel --out-dir dist src",
+    "watch": "babel -w --out-dir dist src",
+    "test": "mocha --inline-diffs --check-leaks --compilers js:babel/register --ui tdd --recursive test"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "babel": "^5.1.10",
+    "mocha": "^2.2.4"
+  },
+  "dependencies": {
+    "debug": "^2.1.3"
+  }
+}
