@@ -11,4 +11,11 @@ describe('Input', () => {
   it('should instantiate', () => {
     assert.ok(input instanceof Input);
   });
+  it('should populate with input data', () => {
+    let input = Input.init({customVal : true});
+    assert(input.customVal);
+  });
+  it('should populate a basedir', () => {
+    assert.equal(input.cwd, process.cwd());
+  });
 });

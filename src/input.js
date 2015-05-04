@@ -5,6 +5,7 @@ class Input {
     Object.assign(this, data);
     this.argv = argv;
     this.env = env;
+    this.cwd = process.cwd();
   }
   static init(...args) {
     return new this(...args);

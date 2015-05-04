@@ -2,62 +2,31 @@
 import util from './util';
 import async from 'async';
 
+import Command from './command';
 import Input from './input';
 import Output from './output';
 
-class App {
+class App extends Command {
   constructor() {
-    this.middleware = [];
-    this.finalware = [];
-    this.commands = [];
-  }
-  static init() {
-    return new this;
-  }
-  use(fn) {
-    this.middleware.push(fn);
-  }
-  after(fn) {
-    this.finalware.push(fn);
+    super();
   }
   command(name, handler) {
-    this.commands.push({name, handler});
+    var command = Command.init(handler);
+    this.tasks.push({name, command});
+    return command;
   }
-  runFinalware(args, cb) {
-    async.series(this.finalware.map(handlerFn => {
-      if (handlerFn.length === 3) return handlerFn.bind(null, ...args);
-      else return function (cb) {
-        handlerFn(...args);
-        cb();
-      }
-    }), cb);
-  }
-  runMiddleware(args, cb) {
-    async.series(this.middleware.map(handlerFn => {
-      if (handlerFn.length === 3) return handlerFn.bind(null, ...args);
-      else return function (cb) {
-        handlerFn(...args);
-        cb();
-      }
-    }), cb);
-  }
-  run(
-    commandName = 'default', 
-    args = [Input.init(), Output.init()], 
-    done = (err) => {if (err) throw err}
-  ) {
-    if (typeof commandName === 'function') {
-      done = commandName;
-      commandName = 'default';
-    }
-    if (typeof args === 'function') {
-      done = args;
-      args = [Input.init(), Output.init()];
-    }
+  run(/* commandName, args, done */) {
+    let [commandName, args, done] = normalizeRunArguments(...arguments);
+    
+    // Default to input.command if none specified
     async.series([
-        cb => this.runMiddleware(args, cb),
-        cb => util.runHandlers(this.getCommands(commandName), args, cb),
-        cb => this.runFinalware(args, cb)
+        cb => this.runBefore(args, cb),
+        cb => {
+          if (args[0].command && commandName === 'default') commandName = args[0].command;
+          cb();
+        },
+        cb => util.runCommands(this.getCommands(commandName), args, cb),
+        cb => this.runAfter(args, cb)
       ], 
       (err, results) => {done(err, ...args)}
     );
@@ -75,8 +44,51 @@ class App {
     })
   }
   getCommands(name) {
-    return this.commands.filter(command => command.name === name);
+    let commands = this.tasks.filter(command => command.name === name);
+    if (commands.length === 0) commands = this.tasks.filter(command => command.name === 'default');
+    return commands;
   }
+}
+
+// This has gotten hairy...
+export function normalizeRunArguments(
+  arg1 = 'default',
+  arg2 = [Input.init(), Output.init()],
+  arg3 = (err) => {if (err) throw err}
+) {
+  switch (arguments.length) {
+    case 1:
+      switch (typeof arg1) {
+        case 'string':
+          arg2 = [Input.init(), Output.init()];
+          arg3 = (err) => {if (err) throw err};
+          break;
+        case 'function':
+          arg3 = arg1;
+          arg1 = 'default';
+          arg2 = [Input.init(), Output.init()];
+          break;
+        default:
+          arg2 = arg1;
+          arg1 = 'default';
+          arg3 = (err) => {if (err) throw err};
+      }
+      break;
+    case 2:
+      let arg1Type = typeof arg1;
+      let arg2Type = typeof arg2;
+      if (arg1Type === 'string' && arg2Type === 'object') {
+        arg3 = (err) => {if (err) throw err};
+      } else if (arg1Type === 'string' && arg2Type === 'function') {
+        arg3 = arg2;
+        arg2 = [Input.init(), Output.init()];
+      } else if (arg1Type === 'object' && arg2Type === 'function') {
+        arg3 = arg2;
+        arg2 = arg1;
+        arg1 = 'default';
+      }
+  }
+  return [arg1, arg2, arg3];
 }
 
 export default App;
