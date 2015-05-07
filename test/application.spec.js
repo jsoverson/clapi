@@ -23,7 +23,7 @@ describe('app', () => {
     });
   });
   it('should allow global middleware to augment input & output', (done) => {
-    app.before((input, output, pluginDone) => {
+    app.use((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
       };
@@ -96,7 +96,7 @@ describe('app', () => {
     
   });
   it('should be able to batch commands', (done) => {
-    app.before((input, output) => {
+    app.use((input, output) => {
       input.fromMiddleware = 'from plugin';
       output.eos = '!'
     });

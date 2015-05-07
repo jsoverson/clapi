@@ -23,7 +23,7 @@ describe('command', () => {
     });
   });
   it('should allow middleware to augment input & output', (done) => {
-    command.before((input, output, pluginDone) => {
+    command.use((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
       }; 
@@ -51,5 +51,22 @@ describe('command', () => {
       assert(output instanceof Output);
     });
     command.run(done);
+  });
+  it('should be able to define and accept arguments', (done) => {
+    command.arg('argument1', 'test');
+    command.arg('argument2', undefined).required();
+    
+    command.add(function(input, output) {
+      assert.equal(input.args.argument1, 'custom');
+    });
+    
+    command.run([Input.init({args: {argument1 : 'custom'}}), Output.init()], (err, input, output) => {
+      assert(err);
+      command.run([Input.init({args: {argument1 : 'custom', argument2 : 'exists'}}), Output.init()], (err, input, output) => {
+        assert(!err);
+        done();
+      });
+    });
+    
   });
 });
