@@ -18,4 +18,21 @@ describe('Input', () => {
   it('should populate a basedir', () => {
     assert.equal(input.cwd, process.cwd());
   });
+  it('should be clonable', () => {
+    input.oldProp = 'oldVal';
+    var newInput = input.clone({additionalProp:'value'});
+    assert(newInput !== input);
+    assert.equal(input.oldProp, 'oldVal');
+    assert(!('additionalProp' in input));
+    assert.equal(newInput.additionalProp, 'value');
+    assert.equal(newInput.oldProp, 'oldVal');
+  });
+  it('should be able to merge data into properties with one command', () => {
+    input.args = {
+      oldVal: 2
+    };
+    input.merge('args', {newVal : 3});
+    assert.equal(input.args.oldVal, 2);
+    assert.equal(input.args.newVal, 3);
+  })
 });
