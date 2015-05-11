@@ -1,5 +1,4 @@
 
-
 class Input {
   constructor(data = {}) {
     Object.assign(this, data);
@@ -15,6 +14,9 @@ class Input {
     this[key] = this[key] || {};
     Object.assign(this[key], data);
     return this;
+  }
+  toString() {
+    return `[object ${this.constructor.name}]`
   }
 }
 

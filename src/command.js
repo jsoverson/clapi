@@ -1,10 +1,10 @@
 
-import util from './util';
 import async from 'async';
 
 import Argument from './argument';
 import Input from './input';
 import Output from './output';
+import util from './util';
 
 class Command {
   constructor(task) {
@@ -13,6 +13,9 @@ class Command {
     this.tasks = [];
     this.args = [];
     if (task) this.add(task);
+  }
+  toString() {
+    return `[object ${this.constructor.name}]`
   }
   static init(...args) {
     return new this(...args);
@@ -50,16 +53,17 @@ class Command {
     }), cb);
   }
   run(args, done) {
-    if (typeof args === 'function') {
-      done = args;
-      args = [Input.init(), Output.init()];
-    }
+    let input = util.findType('Input', args) || util.findType('Object', args) || Input.init();
+    let output = util.findType('Output', args) || Output.init();
+    done = util.findType('Function', arguments) || function(err) {if (err) throw err};
     
     try {
-      this.reconcileArguments(args[0]);
+      this.reconcileArguments(input);
     } catch (e) {
       return done(e);
     }
+    
+    args = [input, output]; 
 
     // Default to input.command if none specified
     async.series([

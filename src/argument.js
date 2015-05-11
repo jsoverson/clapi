@@ -13,6 +13,9 @@ class Argument {
     this.description = description;
     this.isRequired = false;
   }
+  toString() {
+    return `[object ${this.constructor.name}]`
+  }
   static init(...args) {
     return new this(...args);
   }

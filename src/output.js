@@ -27,6 +27,9 @@ class Output {
   end(data = this.data) {
     console.log(data);
   }
+  toString() {
+    return `[object ${this.constructor.name}]`
+  }
 }
 
 export default Output;  

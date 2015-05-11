@@ -1,14 +1,17 @@
 
-import util from './util';
 import async from 'async';
 
 import Command from './command';
 import Input from './input';
 import Output from './output';
+import util from './util';
 
-class App extends Command {
+class Application extends Command {
   constructor() {
     super();
+  }
+  toString() {
+    return `[object ${this.constructor.name}]`
   }
   command(name, handler) {
     var command = Command.init(handler);
@@ -50,45 +53,13 @@ class App extends Command {
   }
 }
 
-// This has gotten hairy...
-export function normalizeRunArguments(
-  arg1 = 'default',
-  arg2 = [Input.init(), Output.init()],
-  arg3 = (err) => {if (err) throw err}
-) {
-  switch (arguments.length) {
-    case 1:
-      switch (typeof arg1) {
-        case 'string':
-          arg2 = [Input.init(), Output.init()];
-          arg3 = (err) => {if (err) throw err};
-          break;
-        case 'function':
-          arg3 = arg1;
-          arg1 = 'default';
-          arg2 = [Input.init(), Output.init()];
-          break;
-        default:
-          arg2 = arg1;
-          arg1 = 'default';
-          arg3 = (err) => {if (err) throw err};
-      }
-      break;
-    case 2:
-      let arg1Type = typeof arg1;
-      let arg2Type = typeof arg2;
-      if (arg1Type === 'string' && arg2Type === 'object') {
-        arg3 = (err) => {if (err) throw err};
-      } else if (arg1Type === 'string' && arg2Type === 'function') {
-        arg3 = arg2;
-        arg2 = [Input.init(), Output.init()];
-      } else if (arg1Type === 'object' && arg2Type === 'function') {
-        arg3 = arg2;
-        arg2 = arg1;
-        arg1 = 'default';
-      }
-  }
-  return [arg1, arg2, arg3];
+export function normalizeRunArguments(/*commandName, [input, output], done*/) {
+  var commandName = util.findType('String', arguments) || 'default';
+  var args = util.findType('Array', arguments) || [];
+  var input = util.findType('Input', args) || Input.init();
+  var output = util.findType('Output', args) || Output.init();
+  var done = util.findType('Function', arguments) || ((err) => {if (err) throw err});
+  return [commandName, [input, output], done];
 }
 
-export default App;
+export default Application;

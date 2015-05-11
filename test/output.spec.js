@@ -15,5 +15,8 @@ describe('Output', () => {
     output.push({ value : 'object data'});
     var data = output.pop();
     assert.equal(data.value, 'object data');
-  })
+  });
+  it('should have a unique toString()', () => {
+    assert.equal(output.toString(), '[object Output]');
+  });
 });

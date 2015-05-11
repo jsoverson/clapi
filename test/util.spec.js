@@ -3,6 +3,8 @@ import assert from 'assert';
 
 import util from '../src/util';
 import Command from '../src/command';
+import Input from '../src/input';
+import Output from '../src/output';
 
 describe('util', () => {
 
@@ -13,7 +15,7 @@ describe('util', () => {
         {name : 'handler2', command : Command.init((input, output) => { input.b = output.b = 2; })}, // note, no next()
         {name : 'handler3', command : Command.init((input, output, next) => { input.c = output.c = 3; next(); })}
       ];
-      util.runCommands(handlers, [{},{}], (err, input, output) => {
+      util.runCommands(handlers, [Input.init(), Output.init()], (err, input, output) => {
         assert.ok(!err);
         assert.equal(input.a, 1);
         assert.equal(input.b, 2);

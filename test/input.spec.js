@@ -34,5 +34,8 @@ describe('Input', () => {
     input.merge('args', {newVal : 3});
     assert.equal(input.args.oldVal, 2);
     assert.equal(input.args.newVal, 3);
-  })
+  });
+  it('should have a unique toString()', () => {
+    assert.equal(input.toString(), '[object Input]');
+  });
 });
