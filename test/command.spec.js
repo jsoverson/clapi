@@ -23,7 +23,7 @@ describe('command', () => {
     });
   });
   it('should allow middleware to augment input & output', (done) => {
-    command.use((input, output, pluginDone) => {
+    command.pre((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
       }; 
@@ -34,7 +34,7 @@ describe('command', () => {
   });
   it('should pass input & output to finalware', (done) => {
     var ran = false;
-    command.after((input, output, pluginDone) => {
+    command.post((input, output, pluginDone) => {
       assert.deepEqual(output.data, {test:true});
       ran = true;
       pluginDone();

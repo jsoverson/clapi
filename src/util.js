@@ -4,14 +4,15 @@ import async from 'async';
 import _ from 'lodash';
 
 export default {
+  typeof(obj) {
+    var type = ({}).toString.call(obj).slice(8,-1);
+    if (type === 'Object') {
+      type = obj.toString().slice(8,-1);
+    }
+    return type;
+  },
   findType(type, args) {
-    var matching = Array.prototype.slice.call(args).filter(el => {
-      var elType = ({}).toString.call(el).slice(8,-1);
-      if (elType === 'Object') {
-        elType = el.toString().slice(8,-1);
-      }
-      return elType === type;
-    });
+    var matching = Array.prototype.slice.call(args).filter(el => this.typeof(el) === type);
     return matching[0];
   },
   runTasks : (defs, args, done) => {

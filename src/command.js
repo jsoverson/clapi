@@ -25,10 +25,10 @@ class Command {
     this.args.push(arg);
     return arg;
   }
-  use(fn) {
+  pre(fn) {
     this.beforeTasks.push(fn);
   }
-  after(fn) {
+  post(fn) {
     this.afterTasks.push(fn);
   }
   add(handler) {

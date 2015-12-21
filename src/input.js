@@ -15,6 +15,11 @@ class Input {
     Object.assign(this[key], data);
     return this;
   }
+  merged(key, data) {
+    var input = this.clone();
+    input.merge(...arguments);
+    return input;
+  }
   toString() {
     return `[object ${this.constructor.name}]`
   }

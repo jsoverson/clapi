@@ -35,6 +35,15 @@ describe('Input', () => {
     assert.equal(input.args.oldVal, 2);
     assert.equal(input.args.newVal, 3);
   });
+  it('should have a shortcut for clone->merge', () => {
+    input.args = {
+      oldVal: 2
+    };
+    var newInput = input.merged('args', {newVal : 3});
+    assert(input !== newInput);
+    assert.equal(newInput.args.oldVal, 2);
+    assert.equal(newInput.args.newVal, 3);
+  });
   it('should have a unique toString()', () => {
     assert.equal(input.toString(), '[object Input]');
   });

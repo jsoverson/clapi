@@ -16,14 +16,14 @@ describe('app', () => {
   it('should register and pass through commands', (done) => {
     app.command('pull', (input, output, done) => {output.a = 10; done();} );
     app.command('pull', (input, output, done) => {output.b = 100; done();} );
-    app.run('pull', [], (err, input, output) => {
+    app.run('pull', (err, input, output) => {
       assert.equal(output.a, 10);
       assert.equal(output.b, 100);
       done();
     });
   });
   it('should allow global middleware to augment input & output', (done) => {
-    app.use((input, output, pluginDone) => {
+    app.pre((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
       };
@@ -34,7 +34,7 @@ describe('app', () => {
   });
   it('should pass input & output to finalware', (done) => {
     var ran = false;
-    app.after((input, output, pluginDone) => {
+    app.post((input, output, pluginDone) => {
       assert.deepEqual(output.data, {test:true});
       ran = true;
       pluginDone();
@@ -66,35 +66,36 @@ describe('app', () => {
       done();
     });
   });
-  it('should run Input.command if none specified', (done) => {
-    var ran = false;
-    app.command('default', () => {
-      throw new Error('Should not get here');
-    });
-    app.command('notdefault', () => {
-      ran = true;
-    });
-
-    app.run([Input.init({command:'notdefault'})], () => {
-      assert(ran);
-      done();
-    });
-  });
-  it('should not run the default command if an invalid command is specified', (done) => {
-    var ran = false;
-    app.command('default', () => {
-      ran = true;
-    });
-    app.run('nonexistant', (err, input, output) => {
-      assert(ran);
-    });
-    ran = false;
-    app.run([Input.init({command:'anothernonexistantcommand'}), Output.init()], (err, input, output) => {
-      assert(ran);
-      done();
-    });
-    
-  });
+  // deprecated, consider deletion
+  //it('should run Input.command if none specified', (done) => {
+  //  var ran = false;
+  //  app.command('default', () => {
+  //    throw new Error('Should not get here');
+  //  });
+  //  app.command('notdefault', () => {
+  //    ran = true;
+  //  });
+  //
+  //  app.run([Input.init({command:'notdefault'})], () => {
+  //    assert(ran);
+  //    done();
+  //  });
+  //});
+  //it('should not run the default command if an invalid command is specified', (done) => {
+  //  var ran = false;
+  //  app.command('default', () => {
+  //    ran = true;
+  //  });
+  //  app.run('nonexistant', (err, input, output) => {
+  //    assert(ran);
+  //  });
+  //  ran = false;
+  //  app.run([Input.init({command:'anothernonexistantcommand'}), Output.init()], (err, input, output) => {
+  //    assert(ran);
+  //    done();
+  //  });
+  //  
+  //});
   //it('should be able to batch commands', (done) => {
   //  app.use((input, output) => {
   //    input.fromMiddleware = 'from plugin';
@@ -131,16 +132,13 @@ describe('app', () => {
   describe('normalizeRunArguments', () => {
     function assertReturn(expectedArg1, args) {
       assert.equal(args[0], expectedArg1);
-      assert(args[1][0] instanceof Input);
-      assert(args[1][1] instanceof Output);
+      assert(typeof args[1][0], 'object');
+      assert.equal(typeof args[1][1], 'object');
       assert(typeof args[2] === 'function');
     }
     it('should normalize the arguments to run', () => {
-      assertReturn('default', normalizeRunArguments());
-      assertReturn('customCommand', normalizeRunArguments('customCommand'));
       assertReturn('customCommand', normalizeRunArguments('customCommand', () => {}));
       assertReturn('customCommand', normalizeRunArguments('customCommand', [Input.init(), Output.init()], () => {}));
-      assertReturn('default', normalizeRunArguments([Input.init(), Output.init()], () => {}));
       assertReturn('default', normalizeRunArguments(() => {}));
     });
   });

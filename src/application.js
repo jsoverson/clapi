@@ -14,24 +14,23 @@ class Application extends Command {
     return `[object ${this.constructor.name}]`
   }
   command(name, handler) {
-    var command = Command.init(handler);
+    var command = util.typeof(handler) === 'Command' ? handler : Command.init(handler);
     this.tasks.push({name, command});
     return command;
   }
   run(/* commandName, args, done */) {
     let [commandName, args, done] = normalizeRunArguments(...arguments);
+
+    if (typeof done !== 'function') {
+      throw new Error('.run() called without a callback.')
+    }
     
-    // Default to input.command if none specified
     async.series([
         cb => this.runBefore(args, cb),
-        cb => {
-          if (args[0].command && commandName === 'default') commandName = args[0].command;
-          cb();
-        },
         cb => util.runCommands(this.getCommands(commandName), args, cb),
         cb => this.runAfter(args, cb)
       ], 
-      (err, results) => {done(err, ...args)}
+      (err, results) => done(err, ...args)
     );
   }
   getCommands(name) {
@@ -42,12 +41,23 @@ class Application extends Command {
 }
 
 export function normalizeRunArguments(/*commandName, [input, output], done*/) {
-  var commandName = util.findType('String', arguments) || 'default';
-  var args = util.findType('Array', arguments) || [];
-  var input = util.findType('Input', args) || Input.init();
-  var output = util.findType('Output', args) || Output.init();
-  var done = util.findType('Function', arguments) || ((err) => {if (err) throw err});
-  return [commandName, [input, output], done];
+  let done, commandName, args;
+  
+  if (arguments.length === 1 && typeof arguments[0] === 'function') {
+    commandName = 'default';
+    args = [Input.init(), Output.init()];
+    done = arguments[0];
+  } else if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function') { 
+    commandName = arguments[0];
+    args = [Input.init(), Output.init()];
+    done = arguments[1];
+  } else {
+    commandName = arguments[0];
+    args = arguments[1];
+    done = arguments[2];
+  }
+
+  return [commandName, args, done];
 }
 
 export default Application;
