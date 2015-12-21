@@ -129,7 +129,7 @@ describe('app', () => {
       done();
     });
   });
-  describe('normalizeRunArguments', () => {
+  describe('reconcileArguments', () => {
     function assertReturn(expectedArg1, args) {
       assert.equal(args[0], expectedArg1);
       assert(typeof args[1][0], 'object');

@@ -58,7 +58,7 @@ class Command {
     done = util.findType('Function', arguments) || function(err) {if (err) throw err};
     
     try {
-      this.reconcileArguments(input);
+      this.normalizeArguments(input);
     } catch (e) {
       return done(e);
     }
@@ -74,7 +74,7 @@ class Command {
       (err, results) => {done && done(err, ...args)}
     );
   }
-  reconcileArguments(input) {
+  normalizeArguments(input) {
     input.args = input.args || {};
     this.args.forEach(arg => {
       if (typeof input.args[arg.name] === 'undefined') {
