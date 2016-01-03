@@ -2,8 +2,6 @@
 import assert from 'assert';
 
 import Command from '../src/command';
-import Input from '../src/input';
-import Output from '../src/output';
 
 describe('command', () => {
   var command;
@@ -40,18 +38,18 @@ describe('command', () => {
       pluginDone();
     });
     command.add((input, output) => {output.data.test = true;} );
-    command.run(() => {
+    command.run((input, output, d) => {
       assert(ran);
       done();
     });
   });
-  it('should default the args to Input and Output instances', (done) => {
-    command.add((input, output) => {
-      assert(input instanceof Input);
-      assert(output instanceof Output);
-    });
-    command.run(done);
-  });
+  //it('should default the args to Input and Output instances', (done) => {
+  //  command.add((input, output) => {
+  //    assert(input instanceof Input);
+  //    assert(output instanceof Output);
+  //  });
+  //  command.run(done);
+  //});
   it('should be able to define and accept arguments', (done) => {
     command.arg('argument1', 'test');
     command.arg('argument2', undefined).required();
@@ -60,9 +58,9 @@ describe('command', () => {
       assert.equal(input.args.argument1, 'custom');
     });
     
-    command.run([Input.init({args: {argument1 : 'custom'}}), Output.init()], (err, input, output) => {
+    command.run([{args: {argument1 : 'custom'}}, {}], (err, input, output) => {
       assert(err);
-      command.run([Input.init({args: {argument1 : 'custom', argument2 : 'exists'}}), Output.init()], (err, input, output) => {
+      command.run([{args: {argument1 : 'custom', argument2 : 'exists'}}, {}], (err, input, output) => {
         assert(!err);
         done();
       });

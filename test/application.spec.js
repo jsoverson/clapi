@@ -2,8 +2,6 @@
 import assert from 'assert';
 
 import application, {normalizeRunArguments} from '../src/application';
-import Input from '../src/input';
-import Output from '../src/output';
 
 describe('app', () => {
   var app;
@@ -30,7 +28,7 @@ describe('app', () => {
       pluginDone();
     });
     app.command('pull', (input, output) => {output.log(2);} );
-    app.run('pull', [Input.init(), Output.init()], done);
+    app.run('pull', [{}, {}], done);
   });
   it('should pass input & output to finalware', (done) => {
     var ran = false;
@@ -45,13 +43,13 @@ describe('app', () => {
       done();
     });
   });
-  it('should default the args to Input and Output instances', (done) => {
-    app.command('pull', (input, output) => {
-      assert(input instanceof Input);
-      assert(output instanceof Output);
-    });
-    app.run('pull', done);
-  });
+  //it('should default the args to Input and Output instances', (done) => {
+  //  app.command('pull', (input, output) => {
+  //    assert(input instanceof Input);
+  //    assert(output instanceof Output);
+  //  });
+  //  app.run('pull', done);
+  //});
   it('should run the default command if none specified', (done) => {
     var ran = false;
     app.command('default', () => {
@@ -138,7 +136,7 @@ describe('app', () => {
     }
     it('should normalize the arguments to run', () => {
       assertReturn('customCommand', normalizeRunArguments('customCommand', () => {}));
-      assertReturn('customCommand', normalizeRunArguments('customCommand', [Input.init(), Output.init()], () => {}));
+      assertReturn('customCommand', normalizeRunArguments('customCommand', [{}, {}], () => {}));
       assertReturn('default', normalizeRunArguments(() => {}));
     });
   });

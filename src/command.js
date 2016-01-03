@@ -1,9 +1,8 @@
 
 import async from 'async';
+import extend from 'extend';
 
 import Argument from './argument';
-import Input from './input';
-import Output from './output';
 import util from './util';
 
 class Command {
@@ -44,6 +43,9 @@ class Command {
     }), cb);
   }
   runBefore(args, cb) {
+    args[0] = decorateInput(args[0]);
+    args[1] = decorateOutput(args[1]);
+
     async.series(this.beforeTasks.map(handlerFn => {
       if (handlerFn.length === 3) return handlerFn.bind(null, ...args);
       else return function (cb) {
@@ -53,18 +55,14 @@ class Command {
     }), cb);
   }
   run(args, done) {
-    let input = util.findType('Input', args) || util.findType('Object', args) || Input.init();
-    let output = util.findType('Output', args) || Output.init();
     done = util.findType('Function', arguments) || function(err) {if (err) throw err};
     
     try {
-      this.normalizeArguments(input);
+      this.normalizeArguments(args[0]);
     } catch (e) {
       return done(e);
     }
     
-    args = [input, output]; 
-
     // Default to input.command if none specified
     async.series([
           cb => this.runBefore(args, cb),
@@ -87,6 +85,25 @@ class Command {
       }
     });
   }
+}
+
+// TODO : TESTS!
+export function decorateInput(obj = {}) {
+  return extend(true, {}, obj, {
+    cwd : process.cwd(),
+    extend : (...args) => {
+      return extend(true, obj, ...args);
+    },
+    cloneWith : (...args) => {
+      return extend(true, {}, obj, ...args);
+    } 
+  });
+}
+
+export function decorateOutput(obj = {}) {
+  return extend(true, {}, obj, {
+    data : {}
+  });
 }
 
 export default Command;
