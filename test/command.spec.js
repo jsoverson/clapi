@@ -1,12 +1,12 @@
 
 import assert from 'assert';
 
-import Command from '../src/command';
+import Command, {normalizeRunArguments} from '../src/command';
 
 describe('command', () => {
   var command;
   beforeEach(() => {
-    command = Command.init();
+    command = Command.create();
   });
   it('should instantiate', () => {
     assert.ok(command);
@@ -101,6 +101,78 @@ describe('command', () => {
       assert.equal(input.primary, 100);
       assert.equal(output.primary, 200);
       done();
+    });
+  });
+  it('should register and pass through commands', (done) => {
+    command.command('pull').add((input, output, done) => {output.a = 10; done();} )
+      .add((input, output, done) => {output.b = 100; done();} );
+    command.run('pull', (err, input, output) => {
+      if (err) return done(err);
+      assert.equal(output.a, 10);
+      assert.equal(output.b, 100);
+      done();
+    });
+  });
+  it('should allow global middleware to augment input & output', (done) => {
+    command.before((input, output, pluginDone) => {
+      output.log = (value) => {
+        assert.equal(2, value);
+      };
+      pluginDone();
+    });
+    command.command('pull').add((input, output) => {output.log(2);} );
+    command.run('pull', [{}, {}], done);
+  });
+  it('should pass input & output to finalware', (done) => {
+    var ran = false;
+    command.after((input, output, pluginDone) => {
+      assert.deepEqual(output.data, {test:true});
+      ran = true;
+      pluginDone();
+    });
+    command.command('pull').add((input, output) => {output.data.test = true;} );
+    command.run('pull', () => {
+      assert(ran);
+      done();
+    });
+  });
+  it('should run the default command if none specified', (done) => {
+    var ran = false;
+    command.command('default').add(() => {
+      ran = true;
+    });
+    command.command('notdefault').add(() => {
+      throw new Error('Should not get here');
+    });
+
+    command.runCommand(() => {
+      assert(ran);
+      done();
+    });
+  });
+  it('should allow commands to be nestable', (done) => {
+    command.command('a').add((input, output, done) => {
+      output.data.a = 2;
+      command.run('b', [input, output], done);
+    });
+    command.command('b').add((input, output) => {output.data.b = 1;});
+    command.run('a', (err, input, output) => {
+      assert.equal(output.data.a, 2);
+      assert.equal(output.data.b, 1);
+      done();
+    });
+  });
+  describe('reconcileArguments', () => {
+    function assertReturn(expectedArg1, args) {
+      assert.equal(args[0], expectedArg1);
+      assert(typeof args[1][0], 'object');
+      assert.equal(typeof args[1][1], 'object');
+      assert(typeof args[2] === 'function');
+    }
+    it('should normalize the arguments to run', () => {
+      assertReturn('customCommand', normalizeRunArguments('customCommand', () => {}));
+      assertReturn('customCommand', normalizeRunArguments('customCommand', [{}, {}], () => {}));
+      assertReturn('default', normalizeRunArguments(() => {}));
     });
   });
 });

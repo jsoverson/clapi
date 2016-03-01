@@ -1,8 +1,6 @@
 
 import async from 'async';
 
-import _ from 'lodash';
-
 export default {
   typeof(obj) {
     var type = ({}).toString.call(obj).slice(8,-1);
@@ -25,11 +23,4 @@ export default {
     });
     async.series(boundHandlers, (err, results) => { done(err, ...args); });
   },
-  runCommands : (defs, args, done) => {
-    let commands = _.pluck(defs, 'command');
-    let boundHandlers = commands.map(command => {
-      return command.run.bind(command, args);
-    });
-    async.series(boundHandlers, (err, results) => { done(err, ...args); });
-  }
 };

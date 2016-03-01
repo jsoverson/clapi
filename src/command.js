@@ -4,11 +4,12 @@ import extend from 'extend';
 
 import util from './util';
 
-class Command {
+export default class Command {
   constructor(task) {
     this.beforeTasks = [];
     this.afterTasks = [];
     this.tasks = [];
+    this.commands = {};
     this.args = [];
     this.middleware = [];
     if (task) this.add(task);
@@ -16,20 +17,29 @@ class Command {
   toString() {
     return `[object ${this.constructor.name}]`;
   }
-  static init(...args) {
+  command(name, handler) {
+    var command = util.typeof(handler) === 'Command' ? handler : Command.create(handler);
+    this.commands[name] = command;
+    return command;
+  }
+  static create(...args) {
     return new this(...args);
   }
   use(middleware) {
     this.middleware.push(middleware);
+    return this;
   }
   before(fn) {
     this.beforeTasks.push(fn);
+    return this;
   }
   after(fn) {
     this.afterTasks.push(fn);
+    return this;
   }
   add(handler) {
     this.tasks.push(handler);
+    return this;
   }
   runAfter(args, cb) {
     async.series([
@@ -50,7 +60,26 @@ class Command {
                                          .map(middleware => middleware.run.bind(middleware)), args, cb),
     ], cb);
   }
-  run(args, done) {
+  runCommand(/*command, args, done*/) {
+    let [commandName, args, done] = normalizeRunArguments(...arguments);
+    if (!this.commands[commandName]) throw new Error(`command ${commandName} not found`);
+
+    if (typeof done !== 'function') {
+      throw new Error('.runCommand() called without a callback.');
+    }
+
+    async.series([
+      cb => this.runBefore(args, cb),
+      cb => this.commands[commandName].run(args, cb),
+      cb => this.runAfter(args, cb)
+    ],
+      (err, results) => done(err, ...args)
+    );
+
+  }
+  run(/* ?name, */ args, done) {
+    if (typeof args === 'string') return this.runCommand.apply(this, arguments);
+    
     done = util.findType('Function', arguments) || function(err) {if (err) throw err;};
     
     async.series([
@@ -82,4 +111,22 @@ export function decorateOutput(obj = {}) {
   });
 }
 
-export default Command;
+export function normalizeRunArguments(/*commandName, [input, output], done*/) {
+  let done, commandName, args;
+
+  if (arguments.length === 1 && typeof arguments[0] === 'function') {
+    commandName = 'default';
+    args = [{}, {}];
+    done = arguments[0];
+  } else if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function') {
+    commandName = arguments[0];
+    args = [{}, {}];
+    done = arguments[1];
+  } else {
+    commandName = arguments[0];
+    args = arguments[1];
+    done = arguments[2];
+  }
+
+  return [commandName, args, done];
+}
