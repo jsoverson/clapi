@@ -6,17 +6,18 @@
   "scripts": {
     "build": "babel --optional runtime --out-dir dist src",
     "watch": "babel -w --optional runtime --out-dir dist src",
-    "test": "mocha --inline-diffs --check-leaks --compilers js:babel/register --ui tdd --recursive test"
+    "test": "mocha --inline-diffs --check-leaks --compilers js:babel/register --ui tdd --recursive test",
+    "lint": "eslint src test"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "babel": "^5.1.10",
+    "eslint": "^2.2.0",
     "mocha": "^2.2.4"
   },
   "dependencies": {
     "debug": "^2.1.3",
-    "extend": "^3.0.0",
-    "object-assign": "^2.0.0"
+    "extend": "^3.0.0"
   }
 }

@@ -2,7 +2,6 @@
 import async from 'async';
 import extend from 'extend';
 
-import Argument from './argument';
 import util from './util';
 
 class Command {
@@ -11,18 +10,17 @@ class Command {
     this.afterTasks = [];
     this.tasks = [];
     this.args = [];
+    this.middleware = [];
     if (task) this.add(task);
   }
   toString() {
-    return `[object ${this.constructor.name}]`
+    return `[object ${this.constructor.name}]`;
   }
   static init(...args) {
     return new this(...args);
   }
-  arg(...args) {
-    var arg = Argument.init(...args);
-    this.args.push(arg);
-    return arg;
+  use(middleware) {
+    this.middleware.push(middleware);
   }
   pre(fn) {
     this.beforeTasks.push(fn);
@@ -34,62 +32,40 @@ class Command {
     this.tasks.push(handler);
   }
   runAfter(args, cb) {
-    async.series(this.afterTasks.map(handlerFn => {
-      if (handlerFn.length === 3) return handlerFn.bind(null, ...args);
-      else return function (cb) {
-        handlerFn(...args);
-        cb();
-      }
-    }), cb);
+    async.series([
+      cb => util.runTasks(this.middleware.filter(middleware => middleware.after)
+                                         .map(middleware => middleware.after.bind(middleware)), args, cb),
+      cb => util.runTasks(this.afterTasks, args, cb),
+    ], cb);
   }
   runBefore(args, cb) {
     args[0] = decorateInput(args[0]);
     args[1] = decorateOutput(args[1]);
 
-    async.series(this.beforeTasks.map(handlerFn => {
-      if (handlerFn.length === 3) return handlerFn.bind(null, ...args);
-      else return function (cb) {
-        handlerFn(...args);
-        cb();
-      }
-    }), cb);
+    async.series([
+      cb => util.runTasks(this.middleware.filter(middleware => middleware.before)
+                                         .map(middleware => middleware.before.bind(middleware)), args, cb),
+      cb => util.runTasks(this.beforeTasks, args, cb),
+      cb => util.runTasks(this.middleware.filter(middleware => middleware.run)
+                                         .map(middleware => middleware.run.bind(middleware)), args, cb),
+    ], cb);
   }
   run(args, done) {
-    done = util.findType('Function', arguments) || function(err) {if (err) throw err};
+    done = util.findType('Function', arguments) || function(err) {if (err) throw err;};
     
-    try {
-      this.normalizeArguments(args[0]);
-    } catch (e) {
-      return done(e);
-    }
-    
-    // Default to input.command if none specified
     async.series([
-          cb => this.runBefore(args, cb),
-          cb => util.runTasks(this.tasks, args, cb),
-          cb => this.runAfter(args, cb)
-      ],
-      (err, results) => {done && done(err, ...args)}
+      cb => this.runBefore(args, cb),
+      cb => util.runTasks(this.tasks, args, cb),
+      cb => this.runAfter(args, cb)
+    ],
+      (err, results) => {done && done(err, ...args);}
     );
-  }
-  normalizeArguments(input) {
-    input.args = input.args || {};
-    this.args.forEach(arg => {
-      if (typeof input.args[arg.name] === 'undefined') {
-        if (arg.isRequired) {
-          throw new Error(`Argument ${arg.name} is required`);
-        }
-        if (arg.defaultValue) {
-          input.args[arg.name] = arg.defaultValue;
-        }
-      }
-    });
   }
 }
 
 // TODO : TESTS!
 export function decorateInput(obj = {}) {
-  return extend(true, {}, obj, {
+  return extend(true, obj, {
     cwd : process.cwd(),
     extend : (...args) => {
       return extend(true, obj, ...args);
@@ -101,7 +77,7 @@ export function decorateInput(obj = {}) {
 }
 
 export function decorateOutput(obj = {}) {
-  return extend(true, {}, obj, {
+  return extend(true, obj, {
     data : {}
   });
 }

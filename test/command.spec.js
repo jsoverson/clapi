@@ -20,7 +20,7 @@ describe('command', () => {
       done();
     });
   });
-  it('should allow middleware to augment input & output', (done) => {
+  it('should run pre and be able to augment input & output', (done) => {
     command.pre((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
@@ -30,7 +30,7 @@ describe('command', () => {
     command.add((input, output) => {output.log(2);});
     command.run([{input:true},{output:true}], done);
   });
-  it('should pass input & output to finalware', (done) => {
+  it('should run post and be passed the same input & output', (done) => {
     var ran = false;
     command.post((input, output, pluginDone) => {
       assert.deepEqual(output.data, {test:true});
@@ -38,33 +38,69 @@ describe('command', () => {
       pluginDone();
     });
     command.add((input, output) => {output.data.test = true;} );
-    command.run((input, output, d) => {
+    command.run([{},{}], (err, input, output) => {
       assert(ran);
       done();
     });
   });
-  //it('should default the args to Input and Output instances', (done) => {
-  //  command.add((input, output) => {
-  //    assert(input instanceof Input);
-  //    assert(output instanceof Output);
-  //  });
-  //  command.run(done);
-  //});
-  it('should be able to define and accept arguments', (done) => {
-    command.arg('argument1', 'test');
-    command.arg('argument2', undefined).required();
-    
-    command.add(function(input, output) {
-      assert.equal(input.args.argument1, 'custom');
-    });
-    
-    command.run([{args: {argument1 : 'custom'}}, {}], (err, input, output) => {
-      assert(err);
-      command.run([{args: {argument1 : 'custom', argument2 : 'exists'}}, {}], (err, input, output) => {
-        assert(!err);
+  it('should run middleware before pre, post, and run', function(done){
+    command.use({
+      before: function(input, output, done) {
+        input.middlewareBefore = 1;
+        output.middlewareBefore = 10;
         done();
-      });
+      },
+      run: function(input, output, done) {
+        input.middlewareRun = 2;
+        output.middlewareRun = 20;
+        done();
+      },
+      after: function(input, output, done) {
+        input.middlewareAfter = 3;
+        output.middlewareAfter = 30;
+        done();
+      }
     });
-    
+    command.add((input, output, done) => {
+      assert.equal(input.middlewareBefore, 1);
+      assert.equal(output.middlewareBefore, 10);
+      assert.equal(input.middlewareRun, 2);
+      assert.equal(output.middlewareRun, 20);
+      assert(!input.middlewareAfter);
+      assert(!output.middlewareAfter);
+      input.primary = 100;
+      output.primary = 200;
+      done();
+    });
+    command.run([{},{}], function(err, input, output) {
+      if (err) return done(err);
+      assert.equal(input.middlewareAfter, 3);
+      assert.equal(output.middlewareAfter, 30);
+      assert.equal(input.primary, 100);
+      assert.equal(output.primary, 200);
+      done();
+    });
+  });
+  it('should not freak out on missing methods in middleware', function(done){
+    command.use({
+      run: function(input, output, done) {
+        input.middlewareRun = 2;
+        output.middlewareRun = 20;
+        done();
+      },
+    });
+    command.add((input, output, done) => {
+      assert.equal(input.middlewareRun, 2);
+      assert.equal(output.middlewareRun, 20);
+      input.primary = 100;
+      output.primary = 200;
+      done();
+    });
+    command.run([{},{}], function(err, input, output) {
+      if (err) return done(err);
+      assert.equal(input.primary, 100);
+      assert.equal(output.primary, 200);
+      done();
+    });
   });
 });

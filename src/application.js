@@ -9,7 +9,7 @@ class Application extends Command {
     super();
   }
   toString() {
-    return `[object ${this.constructor.name}]`
+    return `[object ${this.constructor.name}]`;
   }
   command(name, handler) {
     var command = util.typeof(handler) === 'Command' ? handler : Command.init(handler);
@@ -23,7 +23,7 @@ class Application extends Command {
     let [commandName, args, done] = normalizeRunArguments(...arguments);
 
     if (typeof done !== 'function') {
-      throw new Error('.run() called without a callback.')
+      throw new Error('.run() called without a callback.');
     }
     
     let commands = this.getCommands(commandName);
@@ -33,10 +33,10 @@ class Application extends Command {
     }
     
     async.series([
-        cb => this.runBefore(args, cb),
-        cb => util.runCommands(commands, args, cb),
-        cb => this.runAfter(args, cb)
-      ], 
+      cb => this.runBefore(args, cb),
+      cb => util.runCommands(commands, args, cb),
+      cb => this.runAfter(args, cb)
+    ], 
       (err, results) => done(err, ...args)
     );
   }

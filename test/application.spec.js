@@ -43,13 +43,6 @@ describe('app', () => {
       done();
     });
   });
-  //it('should default the args to Input and Output instances', (done) => {
-  //  app.command('pull', (input, output) => {
-  //    assert(input instanceof Input);
-  //    assert(output instanceof Output);
-  //  });
-  //  app.run('pull', done);
-  //});
   it('should run the default command if none specified', (done) => {
     var ran = false;
     app.command('default', () => {
@@ -64,66 +57,15 @@ describe('app', () => {
       done();
     });
   });
-  // deprecated, consider deletion
-  //it('should run Input.command if none specified', (done) => {
-  //  var ran = false;
-  //  app.command('default', () => {
-  //    throw new Error('Should not get here');
-  //  });
-  //  app.command('notdefault', () => {
-  //    ran = true;
-  //  });
-  //
-  //  app.run([Input.init({command:'notdefault'})], () => {
-  //    assert(ran);
-  //    done();
-  //  });
-  //});
-  //it('should not run the default command if an invalid command is specified', (done) => {
-  //  var ran = false;
-  //  app.command('default', () => {
-  //    ran = true;
-  //  });
-  //  app.run('nonexistant', (err, input, output) => {
-  //    assert(ran);
-  //  });
-  //  ran = false;
-  //  app.run([Input.init({command:'anothernonexistantcommand'}), Output.init()], (err, input, output) => {
-  //    assert(ran);
-  //    done();
-  //  });
-  //  
-  //});
-  //it('should be able to batch commands', (done) => {
-  //  app.use((input, output) => {
-  //    input.fromMiddleware = 'from plugin';
-  //    output.eos = '!'
-  //  });
-  //  app.command('pull', (input, output) => {output.data.command1a = input.value + input.fromMiddleware + output.eos;});
-  //  app.command('pull', (input, output) => {output.data.command1b = input.value + input.fromMiddleware + output.eos;});
-  //  app.command('push', (input, output) => {output.data.command2 = output.cap(input.value + ' world') + output.eos;});
-  //  app.batch([
-  //      ['pull', Input.init({value : 'from init '})],
-  //      ['push', Input.init({value : 'Hello'}), Output.init({cap: _ => _.toUpperCase()})]
-  //    ], 
-  //    (err, results) => {
-  //      assert.ok(!err);
-  //      assert.equal(results[0].output.data.command1a, 'from init from plugin!');
-  //      assert.equal(results[0].output.data.command1b, 'from init from plugin!');
-  //      assert.equal(results[1].output.data.command2, 'HELLO WORLD!');
-  //      done();
-  //    }
-  //  );
-  //});
   it('should allow commands to be nestable', (done) => {
     app.command('a', (input, output, done) => {
-      output.data.a = true;
-      app.run('b', [input, output], done)
+      output.data.a = 2;
+      app.run('b', [input, output], done);
     });
-    app.command('b', (input, output) => {output.data.b = true;});
+    app.command('b', (input, output) => {output.data.b = 1;});
     app.run('a', (err, input, output) => {
-      assert(output.data.a);
-      assert(output.data.b);
+      assert.equal(output.data.a, 2);
+      assert.equal(output.data.b, 1);
       done();
     });
   });
