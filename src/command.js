@@ -22,10 +22,10 @@ class Command {
   use(middleware) {
     this.middleware.push(middleware);
   }
-  pre(fn) {
+  before(fn) {
     this.beforeTasks.push(fn);
   }
-  post(fn) {
+  after(fn) {
     this.afterTasks.push(fn);
   }
   add(handler) {

@@ -21,7 +21,7 @@ describe('app', () => {
     });
   });
   it('should allow global middleware to augment input & output', (done) => {
-    app.pre((input, output, pluginDone) => {
+    app.before((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
       };
@@ -32,7 +32,7 @@ describe('app', () => {
   });
   it('should pass input & output to finalware', (done) => {
     var ran = false;
-    app.post((input, output, pluginDone) => {
+    app.after((input, output, pluginDone) => {
       assert.deepEqual(output.data, {test:true});
       ran = true;
       pluginDone();

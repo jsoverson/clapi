@@ -16,9 +16,6 @@ class Application extends Command {
     this.tasks.push({name, command});
     return command;
   }
-  use(handler) {
-    this.pre(handler);
-  }
   run(/* commandName, args, done */) {
     let [commandName, args, done] = normalizeRunArguments(...arguments);
 

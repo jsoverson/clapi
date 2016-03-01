@@ -20,8 +20,8 @@ describe('command', () => {
       done();
     });
   });
-  it('should run pre and be able to augment input & output', (done) => {
-    command.pre((input, output, pluginDone) => {
+  it('should run before and be able to augment input & output', (done) => {
+    command.before((input, output, pluginDone) => {
       output.log = (value) => {
         assert.equal(2, value);
       }; 
@@ -30,9 +30,9 @@ describe('command', () => {
     command.add((input, output) => {output.log(2);});
     command.run([{input:true},{output:true}], done);
   });
-  it('should run post and be passed the same input & output', (done) => {
+  it('should run after and be passed the same input & output', (done) => {
     var ran = false;
-    command.post((input, output, pluginDone) => {
+    command.after((input, output, pluginDone) => {
       assert.deepEqual(output.data, {test:true});
       ran = true;
       pluginDone();
@@ -43,7 +43,7 @@ describe('command', () => {
       done();
     });
   });
-  it('should run middleware before pre, post, and run', function(done){
+  it('should run middleware before before, after, and run', function(done){
     command.use({
       before: function(input, output, done) {
         input.middlewareBefore = 1;
