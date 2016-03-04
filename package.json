@@ -5,6 +5,7 @@
   "main": "dist/command.js",
   "scripts": {
     "build": "babel --optional runtime --out-dir dist src",
+    "clean": "rm -f ./dist/*",
     "watch": "babel -w --optional runtime --out-dir dist src",
     "test": "mocha --inline-diffs --check-leaks --compilers js:babel/register --ui tdd --recursive test",
     "release": "git-dirty && npm run clean && npm run lint && npm test && npm run build",
