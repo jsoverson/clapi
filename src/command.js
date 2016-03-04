@@ -81,6 +81,7 @@ export default class Command {
     if (typeof args === 'string') return this.runCommand.apply(this, arguments);
     
     done = util.findType('Function', arguments) || function(err) {if (err) throw err;};
+    if (!(args instanceof Array)) args = [{}, {}];
     
     async.series([
       cb => this.runBefore(args, cb),

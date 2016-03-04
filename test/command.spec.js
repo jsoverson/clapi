@@ -11,6 +11,13 @@ describe('command', () => {
   it('should instantiate', () => {
     assert.ok(command);
   });
+  it('should allow basic default usage', (done) => {
+    command.add((input, output, done) => {output.a = 10; done();} );
+    command.run((err, input, output) => {
+      assert.equal(output.a, 10);
+      done();
+    });
+  });
   it('should register and pass through subcommands', (done) => {
     command.add((input, output, done) => {output.a = 10; done();} );
     command.add((input, output, done) => {output.b = 100; done();} );
@@ -103,7 +110,7 @@ describe('command', () => {
       done();
     });
   });
-  it('should register and pass through commands', (done) => {
+  it('should create and run subcommands', (done) => {
     command.command('pull').add((input, output, done) => {output.a = 10; done();} )
       .add((input, output, done) => {output.b = 100; done();} );
     command.run('pull', (err, input, output) => {
@@ -123,7 +130,7 @@ describe('command', () => {
     command.command('pull').add((input, output) => {output.log(2);} );
     command.run('pull', [{}, {}], done);
   });
-  it('should pass input & output to finalware', (done) => {
+  it('should pass input & output to after', (done) => {
     var ran = false;
     command.after((input, output, pluginDone) => {
       assert.deepEqual(output.data, {test:true});
