@@ -23,7 +23,7 @@ export default class Command {
     return command;
   }
   static create(...args) {
-    return new this(...args);
+    return new Command(...args);
   }
   use(middleware) {
     this.middleware.push(middleware);
@@ -91,6 +91,10 @@ export default class Command {
       (err, results) => {done && done(err, ...args);}
     );
   }
+}
+
+export function create(...args) {
+  return Command.create(...args);
 }
 
 // TODO : TESTS!
